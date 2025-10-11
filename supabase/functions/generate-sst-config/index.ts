@@ -35,7 +35,7 @@ serve(async (req) => {
         body: JSON.stringify({
           specification_hash: "b12f55a404ded71e63fdfe150ffa0bac1622efb5f50666932a32333de88585f6",
           config: {
-            "ANALYZER": {
+            "ANALYER": {
               "provider_id": "openai",
               "model_id": "gpt-4o-mini"
             }
@@ -57,12 +57,18 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Dust.tt API response:', JSON.stringify(data));
 
+    // Check if the run errored
+    if (data.run?.status?.run === 'errored') {
+      const errorMsg = data.run?.traces?.[0]?.[1]?.[0]?.[0]?.error || 'Unknown error from Dust.tt';
+      console.error('Dust.tt run errored:', errorMsg);
+      throw new Error(`Dust.tt processing failed: ${errorMsg}`);
+    }
+
     // Parse the response from Dust.tt
-    // The actual structure may vary based on your Dust.tt app configuration
     const result = {
-      sstConfig: data.run?.results?.[0]?.value?.sstConfig || "// SST configuration will appear here",
-      suggestedChanges: data.run?.results?.[0]?.value?.suggestedChanges || "# Implementation guide will appear here",
-      iamPolicy: data.run?.results?.[0]?.value?.iamPolicy || "{}"
+      sstConfig: data.run?.results?.[0]?.[0]?.value || "// No SST configuration generated",
+      suggestedChanges: data.run?.results?.[0]?.[0]?.value || "# No implementation guide generated",
+      iamPolicy: data.run?.results?.[0]?.[0]?.value || "{}"
     };
 
     return new Response(JSON.stringify(result), {

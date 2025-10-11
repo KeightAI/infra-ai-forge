@@ -72,14 +72,29 @@ export const DeploymentWizard = ({ open, onOpenChange, projects }: DeploymentWiz
           }
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
 
+        if (data?.error) {
+          console.error('Function returned error:', data.error);
+          throw new Error(data.error);
+        }
+
+        console.log('Received AI response:', data);
         setAiResponse(data);
         setStep(3);
+        
+        toast({
+          title: "Configuration generated",
+          description: "Review the generated configuration in the next step"
+        });
       } catch (error: any) {
+        console.error('Error in wizard:', error);
         toast({
           title: "Error generating configuration",
-          description: error.message,
+          description: error.message || "Failed to generate configuration",
           variant: "destructive"
         });
       } finally {

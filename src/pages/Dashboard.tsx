@@ -62,11 +62,41 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const handleDeploy = (projectId: string) => {
-    toast({
-      title: "Deployment initiated",
-      description: "Your project deployment has been queued"
-    });
+  const handleDeploy = async (projectId: string) => {
+    try {
+      const project = projects.find(p => p.id === projectId);
+      if (!project || !project.github_repo_url) {
+        toast({
+          title: "Error",
+          description: "Project not found or missing repository URL",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("deployments")
+        .insert({
+          user_id: user.id,
+          project_id: projectId,
+          repo_url: project.github_repo_url,
+          branch: project.branch_name,
+          status: "pending"
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Deployment initiated",
+        description: "Your project deployment has been queued"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Deployment failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading || !user) {

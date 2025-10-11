@@ -15,8 +15,13 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!;
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL || '30000'); // 30 seconds default
 const PORT = process.env.PORT || 8080;
 
-// Initialize Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// Initialize Supabase client with proper service role configuration
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  }
+});
 
 interface DeploymentJob {
   id: string;
@@ -202,39 +207,6 @@ app.post('/trigger', async (req, res) => {
     res.json({ success: true, message: 'Job polling triggered' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/debug', async (req, res) => {
-  try {
-    // Test 1: Get all jobs
-    const { data: allJobs, error: allError } = await supabase
-      .from('deployment_jobs')
-      .select('*');
-    
-    // Test 2: Get pending jobs
-    const { data: pendingJobs, error: pendingError } = await supabase
-      .from('deployment_jobs')
-      .select('*')
-      .eq('status', 'pending');
-
-    res.json({
-      supabaseUrl: SUPABASE_URL,
-      hasServiceKey: !!SUPABASE_SERVICE_KEY,
-      serviceKeyPrefix: SUPABASE_SERVICE_KEY?.substring(0, 20),
-      allJobs: {
-        count: allJobs?.length || 0,
-        error: allError,
-        data: allJobs
-      },
-      pendingJobs: {
-        count: pendingJobs?.length || 0,
-        error: pendingError,
-        data: pendingJobs
-      }
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { z } from "zod";
 
 interface Project {
   id: string;
@@ -26,6 +27,13 @@ const AWS_SERVICES = [
   "Lambda", "API Gateway", "DynamoDB", "S3", "RDS", 
   "SQS", "SNS", "EventBridge", "Step Functions", "CloudFront"
 ];
+
+const promptSchema = z.object({
+  prompt: z.string()
+    .trim()
+    .min(10, { message: "Please provide more details (at least 10 characters)" })
+    .max(2000, { message: "Prompt must be less than 2000 characters" })
+});
 
 export const DeploymentWizard = ({ open, onOpenChange, projects }: DeploymentWizardProps) => {
   const { toast } = useToast();
@@ -62,11 +70,22 @@ export const DeploymentWizard = ({ open, onOpenChange, projects }: DeploymentWiz
     }
 
     if (step === 2) {
+      // Validate prompt input
+      const validation = promptSchema.safeParse({ prompt });
+      if (!validation.success) {
+        toast({
+          title: "Invalid input",
+          description: validation.error.errors[0].message,
+          variant: "destructive"
+        });
+        return;
+      }
+
       setLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('generate-sst-config', {
           body: {
-            prompt,
+            prompt: validation.data.prompt,
             projectName: selectedProjectData?.name,
             repository: selectedProjectData?.github_repo_url
           }

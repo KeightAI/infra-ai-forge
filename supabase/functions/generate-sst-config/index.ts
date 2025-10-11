@@ -25,7 +25,7 @@ serve(async (req) => {
     console.log('Calling Dust.tt API with prompt:', prompt);
 
     const response = await fetch(
-      `https://dust.tt/api/v1/w/${workspaceId}/apps/${appId}/runs`,
+      `https://dust.tt/api/v1/w/${workspaceId}/spaces/vlt_ySrW39PAjHD9/apps/${appId}/runs`,
       {
         method: 'POST',
         headers: {
@@ -33,18 +33,17 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          specification_hash: null,
+          specification_hash: "b12f55a404ded71e63fdfe150ffa0bac1622efb5f50666932a32333de88585f6",
           config: {
-            blocks: [
-              {
-                type: "input",
-                name: "prompt",
-                value: `Project: ${projectName}\nRepository: ${repository}\n\n${prompt}`
-              }
-            ]
+            "ANALYER": {
+              "provider_id": "openai",
+              "model_id": "gpt-4o-mini"
+            }
           },
           blocking: true,
-          stream: false
+          inputs: [{
+            prompt: `Project: ${projectName}\nRepository: ${repository}\n\n${prompt}`
+          }]
         }),
       }
     );

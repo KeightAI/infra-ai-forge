@@ -1,0 +1,133 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { ProjectCard } from "@/components/ProjectCard";
+import { AddProjectModal } from "@/components/AddProjectModal";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  github_repo_url: string | null;
+  branch_name: string;
+  is_private: boolean;
+  is_deployed: boolean;
+  deployed_url: string | null;
+  created_at: string;
+}
+
+const Dashboard = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  const fetchProjects = async () => {
+    try {
+      setLoadingProjects(true);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching projects",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchProjects();
+    }
+  }, [user]);
+
+  const handleDeploy = (projectId: string) => {
+    toast({
+      title: "Deployment initiated",
+      description: "Your project deployment has been queued"
+    });
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Your Projects</h1>
+            <p className="text-muted-foreground">
+              Manage and deploy your GitHub repositories
+            </p>
+          </div>
+          
+          <Button onClick={() => setAddModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Project
+          </Button>
+        </div>
+
+        {loadingProjects ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <p className="text-muted-foreground mb-4">No projects yet</p>
+            <Button onClick={() => setAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Your First Project
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                {...project}
+                onDeploy={handleDeploy}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <AddProjectModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        onProjectAdded={fetchProjects}
+      />
+    </div>
+  );
+};
+
+export default Dashboard;

@@ -14,7 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deployments: {
+        Row: {
+          branch: string | null
+          created_at: string | null
+          deployed_url: string | null
+          id: string
+          logs: string | null
+          project_id: string | null
+          repo_url: string
+          stage: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          branch?: string | null
+          created_at?: string | null
+          deployed_url?: string | null
+          id?: string
+          logs?: string | null
+          project_id?: string | null
+          repo_url: string
+          stage?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          branch?: string | null
+          created_at?: string | null
+          deployed_url?: string | null
+          id?: string
+          logs?: string | null
+          project_id?: string | null
+          repo_url?: string
+          stage?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deployments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          branch_name: string | null
+          created_at: string
+          deployed_url: string | null
+          description: string | null
+          github_repo_id: string | null
+          github_repo_url: string | null
+          id: string
+          is_deployed: boolean | null
+          is_private: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch_name?: string | null
+          created_at?: string
+          deployed_url?: string | null
+          description?: string | null
+          github_repo_id?: string | null
+          github_repo_url?: string | null
+          id?: string
+          is_deployed?: boolean | null
+          is_private?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch_name?: string | null
+          created_at?: string
+          deployed_url?: string | null
+          description?: string | null
+          github_repo_id?: string | null
+          github_repo_url?: string | null
+          id?: string
+          is_deployed?: boolean | null
+          is_private?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

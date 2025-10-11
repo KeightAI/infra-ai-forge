@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { ProjectCard } from "@/components/ProjectCard";
 import { AddProjectModal } from "@/components/AddProjectModal";
+import { DeploymentWizard } from "@/components/DeploymentWizard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -120,10 +122,16 @@ const Dashboard = () => {
             </p>
           </div>
           
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4 text-primary" />
-            Add Project
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setWizardOpen(true)}>
+              <Wand2 className="mr-2 h-4 w-4" />
+              Deployment Wizard
+            </Button>
+            <Button onClick={() => setAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Project
+            </Button>
+          </div>
         </div>
 
         {loadingProjects ? (
@@ -155,6 +163,12 @@ const Dashboard = () => {
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         onProjectAdded={fetchProjects}
+      />
+
+      <DeploymentWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        projects={projects}
       />
     </div>
   );

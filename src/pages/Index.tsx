@@ -44,7 +44,7 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 my-12">
-            <div className="p-6 rounded-lg border bg-card">
+            <div className="p-6 rounded-lg border bg-[hsl(260,60%,95%)]">
               <Code className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">GitHub Integration</h3>
               <p className="text-sm text-muted-foreground">
@@ -52,7 +52,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="p-6 rounded-lg border bg-card">
+            <div className="p-6 rounded-lg border bg-[hsl(260,60%,95%)]">
               <Zap className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AI-Powered</h3>
               <p className="text-sm text-muted-foreground">
@@ -60,7 +60,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="p-6 rounded-lg border bg-card">
+            <div className="p-6 rounded-lg border bg-[hsl(260,60%,95%)]">
               <Rocket className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AWS Deployment</h3>
               <p className="text-sm text-muted-foreground">

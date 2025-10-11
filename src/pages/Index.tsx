@@ -32,7 +32,7 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Github className="h-12 w-12 text-[hsl(260,60%,65%)]" />
+              <Github className="h-12 w-12 text-[hsl(262.52,28%,47%)]" />
               <h1 className="text-5xl font-bold text-primary">
                 JATE AI
               </h1>
@@ -71,7 +71,7 @@ const Index = () => {
 
           <div className="space-y-4">
             <Button size="lg" onClick={handleSignIn} className="text-lg px-8 py-6">
-              <Github className="mr-2 h-5 w-5 text-[hsl(260,60%,65%)]" />
+              <Github className="mr-2 h-5 w-5 text-white" />
               Sign in with GitHub
             </Button>
             

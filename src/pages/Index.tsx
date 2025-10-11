@@ -27,12 +27,12 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-[image:var(--gradient-background)]">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Github className="h-12 w-12 text-accent" />
+              <Github className="h-12 w-12 text-primary" />
               <h1 className="text-5xl font-bold text-primary">
                 JATE AI
               </h1>
@@ -45,7 +45,7 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6 my-12">
             <div className="p-6 rounded-lg border bg-card">
-              <Code className="h-10 w-10 text-accent mx-auto mb-4" />
+              <Code className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">GitHub Integration</h3>
               <p className="text-sm text-muted-foreground">
                 Connect your repositories and deploy with ease
@@ -53,7 +53,7 @@ const Index = () => {
             </div>
             
             <div className="p-6 rounded-lg border bg-card">
-              <Zap className="h-10 w-10 text-accent mx-auto mb-4" />
+              <Zap className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AI-Powered</h3>
               <p className="text-sm text-muted-foreground">
                 Let AI generate optimal infrastructure configurations
@@ -61,7 +61,7 @@ const Index = () => {
             </div>
             
             <div className="p-6 rounded-lg border bg-card">
-              <Rocket className="h-10 w-10 text-accent mx-auto mb-4" />
+              <Rocket className="h-10 w-10 text-primary mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AWS Deployment</h3>
               <p className="text-sm text-muted-foreground">
                 Deploy to AWS with SST framework support

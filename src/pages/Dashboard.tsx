@@ -121,7 +121,7 @@ const Dashboard = () => {
           </div>
           
           <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4 text-accent" />
+            <Plus className="mr-2 h-4 w-4 text-primary" />
             Add Project
           </Button>
         </div>
@@ -134,7 +134,7 @@ const Dashboard = () => {
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
             <p className="text-muted-foreground mb-4">No projects yet</p>
             <Button onClick={() => setAddModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4 text-accent" />
+              <Plus className="mr-2 h-4 w-4 text-primary" />
               Add Your First Project
             </Button>
           </div>

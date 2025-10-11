@@ -35,7 +35,7 @@ export const ProjectCard = ({
         <div className="flex items-start justify-between">
           <CardTitle className="text-lg font-semibold">{name}</CardTitle>
           <Badge variant={is_private ? "secondary" : "outline"} className="ml-2">
-            {is_private ? <Lock className="h-3 w-3 mr-1 text-accent" /> : <Unlock className="h-3 w-3 mr-1 text-accent" />}
+            {is_private ? <Lock className="h-3 w-3 mr-1 text-primary" /> : <Unlock className="h-3 w-3 mr-1 text-primary" />}
             {is_private ? "Private" : "Public"}
           </Badge>
         </div>
@@ -66,7 +66,7 @@ export const ProjectCard = ({
         {github_repo_url && (
           <Button variant="outline" size="sm" asChild>
             <a href={github_repo_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2 text-accent" />
+              <ExternalLink className="h-4 w-4 mr-2 text-primary" />
               View Repo
             </a>
           </Button>

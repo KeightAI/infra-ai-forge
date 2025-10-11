@@ -128,7 +128,7 @@ export const AddProjectModal = ({ open, onOpenChange, onProjectAdded }: AddProje
         {!showRepos ? (
           <div className="space-y-4">
             <Button onClick={fetchGitHubRepos} disabled={loading} className="w-full">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-accent" />}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />}
               Load GitHub Repositories
             </Button>
           </div>
@@ -159,7 +159,7 @@ export const AddProjectModal = ({ open, onOpenChange, onProjectAdded }: AddProje
                     Back
                   </Button>
                   <Button onClick={handleAddProject} disabled={loading} className="flex-1">
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-accent" />}
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />}
                     Add Project
                   </Button>
                 </div>

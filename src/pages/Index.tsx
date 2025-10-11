@@ -32,7 +32,7 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Github className="h-12 w-12 text-primary" />
+              <Github className="h-12 w-12 text-[hsl(260,60%,65%)]" />
               <h1 className="text-5xl font-bold text-primary">
                 JATE AI
               </h1>
@@ -45,7 +45,7 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6 my-12">
             <div className="p-6 rounded-lg border bg-[image:var(--gradient-background)]">
-              <Code className="h-10 w-10 text-primary mx-auto mb-4" />
+              <Code className="h-10 w-10 text-[hsl(260,60%,65%)] mx-auto mb-4" />
               <h3 className="font-semibold mb-2">GitHub Integration</h3>
               <p className="text-sm text-muted-foreground">
                 Connect your repositories and deploy with ease
@@ -53,7 +53,7 @@ const Index = () => {
             </div>
             
             <div className="p-6 rounded-lg border bg-[image:var(--gradient-background)]">
-              <Zap className="h-10 w-10 text-primary mx-auto mb-4" />
+              <Zap className="h-10 w-10 text-[hsl(260,60%,65%)] mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AI-Powered</h3>
               <p className="text-sm text-muted-foreground">
                 Let AI generate optimal infrastructure configurations
@@ -61,7 +61,7 @@ const Index = () => {
             </div>
             
             <div className="p-6 rounded-lg border bg-[image:var(--gradient-background)]">
-              <Rocket className="h-10 w-10 text-primary mx-auto mb-4" />
+              <Rocket className="h-10 w-10 text-[hsl(260,60%,65%)] mx-auto mb-4" />
               <h3 className="font-semibold mb-2">AWS Deployment</h3>
               <p className="text-sm text-muted-foreground">
                 Deploy to AWS with SST framework support
@@ -71,7 +71,7 @@ const Index = () => {
 
           <div className="space-y-4">
             <Button size="lg" onClick={handleSignIn} className="text-lg px-8 py-6">
-              <Github className="mr-2 h-5 w-5" />
+              <Github className="mr-2 h-5 w-5 text-[hsl(260,60%,65%)]" />
               Sign in with GitHub
             </Button>
             

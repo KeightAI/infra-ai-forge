@@ -362,9 +362,9 @@ export default function DeploymentWizard() {
                 </TabsList>
 
                 <TabsContent value="sstConfig" className="mt-6">
-                  <Card>
+                  <Card className="border-0 bg-[#1e1e1e]">
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                         {aiResponse.sstConfig}
                       </pre>
                     </CardContent>
@@ -372,9 +372,9 @@ export default function DeploymentWizard() {
                 </TabsContent>
 
                 <TabsContent value="suggestedChanges" className="mt-6">
-                  <Card>
+                  <Card className="border-0 bg-[#1e1e1e]">
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                         {aiResponse.suggestedChanges}
                       </pre>
                     </CardContent>
@@ -382,9 +382,9 @@ export default function DeploymentWizard() {
                 </TabsContent>
 
                 <TabsContent value="iamPolicy" className="mt-6">
-                  <Card>
+                  <Card className="border-0 bg-[#1e1e1e]">
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                         {aiResponse.iamPolicy}
                       </pre>
                     </CardContent>

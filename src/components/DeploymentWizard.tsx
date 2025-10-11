@@ -218,24 +218,24 @@ export const DeploymentWizard = ({ open, onOpenChange, projects }: DeploymentWiz
               </TabsList>
 
               <TabsContent value="sstConfig" className="mt-4">
-                <div className="bg-muted p-4 rounded-md">
-                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
+                <div className="bg-[#1e1e1e] p-4 rounded-md border-0">
+                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                     {aiResponse.sstConfig}
                   </pre>
                 </div>
               </TabsContent>
 
               <TabsContent value="suggestedChanges" className="mt-4">
-                <div className="bg-muted p-4 rounded-md">
-                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
+                <div className="bg-[#1e1e1e] p-4 rounded-md border-0">
+                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                     {aiResponse.suggestedChanges}
                   </pre>
                 </div>
               </TabsContent>
 
               <TabsContent value="iamPolicy" className="mt-4">
-                <div className="bg-muted p-4 rounded-md">
-                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
+                <div className="bg-[#1e1e1e] p-4 rounded-md border-0">
+                  <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
                     {aiResponse.iamPolicy}
                   </pre>
                 </div>

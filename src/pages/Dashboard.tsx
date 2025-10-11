@@ -74,6 +74,24 @@ const Dashboard = () => {
         return;
       }
 
+      // Check if deployment already exists for this project
+      const { data: existingDeployment, error: checkError } = await supabase
+        .from("deployments")
+        .select("id")
+        .eq("project_id", projectId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingDeployment) {
+        toast({
+          title: "Deployment already exists",
+          description: "This project has already been submitted for deployment",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("deployments")
         .insert({

@@ -1,4 +1,1 @@
 project_id = "wvkmagueziiglyjplrsd"
-
-[functions.generate-sst-config]
-verify_jwt = false

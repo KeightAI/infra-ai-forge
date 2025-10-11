@@ -26,7 +26,7 @@ export type Database = {
           stage: string | null
           status: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           branch?: string | null
@@ -39,7 +39,7 @@ export type Database = {
           stage?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           branch?: string | null
@@ -52,7 +52,7 @@ export type Database = {
           stage?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {

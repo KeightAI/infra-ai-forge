@@ -33,7 +33,7 @@ const Index = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3 mb-6">
               <Github className="h-12 w-12 text-accent" />
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold text-primary">
                 JATE AI
               </h1>
             </div>

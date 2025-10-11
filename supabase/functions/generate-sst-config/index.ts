@@ -35,7 +35,7 @@ serve(async (req) => {
         body: JSON.stringify({
           specification_hash: "b12f55a404ded71e63fdfe150ffa0bac1622efb5f50666932a32333de88585f6",
           config: {
-            "ANALYER": {
+            "ANALYZER": {
               "provider_id": "openai",
               "model_id": "gpt-4o-mini"
             }

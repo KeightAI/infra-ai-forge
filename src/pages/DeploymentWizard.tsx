@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Github } from "lucide-react";
+import { ArrowLeft, Loader2, Github, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AddProjectModal } from "@/components/AddProjectModal";
 
 interface Project {
   id: string;
@@ -53,6 +54,7 @@ export default function DeploymentWizard() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [showAddProject, setShowAddProject] = useState(false);
   const [aiResponse, setAiResponse] = useState<{
     sstConfig: string;
     suggestedChanges: string;
@@ -61,27 +63,27 @@ export default function DeploymentWizard() {
 
   const selectedProjectData = projects.find(p => p.id === selectedProject);
 
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching projects",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("projects")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setProjects(data || []);
-      } catch (error: any) {
-        toast({
-          title: "Error fetching projects",
-          description: error.message,
-          variant: "destructive"
-        });
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
-
     if (user) {
       fetchProjects();
     }
@@ -245,8 +247,18 @@ export default function DeploymentWizard() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {projects.map((project) => (
+                <>
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      onClick={() => setShowAddProject(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add New Repository
+                    </Button>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {projects.map((project) => (
                     <Card
                       key={project.id}
                       className={`cursor-pointer transition-all hover:shadow-md ${
@@ -276,8 +288,15 @@ export default function DeploymentWizard() {
                       </CardContent>
                     </Card>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
+
+              <AddProjectModal
+                open={showAddProject}
+                onOpenChange={setShowAddProject}
+                onProjectAdded={fetchProjects}
+              />
             </div>
           )}
 

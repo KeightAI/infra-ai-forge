@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { ProjectCard } from "@/components/ProjectCard";
 import { AddProjectModal } from "@/components/AddProjectModal";
-import { DeploymentWizard } from "@/components/DeploymentWizard";
 import { Button } from "@/components/ui/button";
 import { Plus, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +28,6 @@ const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -123,7 +121,7 @@ const Dashboard = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setWizardOpen(true)}>
+            <Button variant="outline" onClick={() => navigate("/deployment-wizard")}>
               <Wand2 className="mr-2 h-4 w-4" />
               Deployment Wizard
             </Button>
@@ -163,12 +161,6 @@ const Dashboard = () => {
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         onProjectAdded={fetchProjects}
-      />
-
-      <DeploymentWizard
-        open={wizardOpen}
-        onOpenChange={setWizardOpen}
-        projects={projects}
       />
     </div>
   );

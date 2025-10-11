@@ -65,10 +65,17 @@ serve(async (req) => {
     }
 
     // Parse the response from Dust.tt
+    // The response is in data.run.results[0][0].value as a single text output
+    const fullResponse = data.run?.results?.[0]?.[0]?.value || "";
+    
+    console.log('Full Dust.tt response:', fullResponse);
+    
+    // Return the full response in all three fields for now
+    // You can parse it differently if Dust.tt returns structured output
     const result = {
-      sstConfig: data.run?.results?.[0]?.[0]?.value || "// No SST configuration generated",
-      suggestedChanges: data.run?.results?.[0]?.[0]?.value || "# No implementation guide generated",
-      iamPolicy: data.run?.results?.[0]?.[0]?.value || "{}"
+      sstConfig: fullResponse || "// No SST configuration generated",
+      suggestedChanges: fullResponse || "# No implementation guide generated", 
+      iamPolicy: fullResponse || "{}"
     };
 
     return new Response(JSON.stringify(result), {

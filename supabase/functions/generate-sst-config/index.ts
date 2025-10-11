@@ -65,17 +65,30 @@ serve(async (req) => {
     }
 
     // Parse the response from Dust.tt
-    // The response is in data.run.results[0][0].value as a single text output
-    const fullResponse = data.run?.results?.[0]?.[0]?.value || "";
+    // The actual content is in data.run.results[0][0].value.message.content
+    const messageContent = data.run?.results?.[0]?.[0]?.value?.message?.content;
     
-    console.log('Full Dust.tt response:', fullResponse);
-    
-    // Return the full response in all three fields for now
-    // You can parse it differently if Dust.tt returns structured output
+    if (!messageContent) {
+      console.error('No message content in response:', JSON.stringify(data.run?.results));
+      throw new Error('No content returned from Dust.tt');
+    }
+
+    console.log('Message content from Dust.tt:', messageContent);
+
+    // Parse the JSON string from message.content
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(messageContent);
+    } catch (e) {
+      console.error('Failed to parse message content as JSON:', e);
+      throw new Error('Invalid JSON format in Dust.tt response');
+    }
+
+    // Extract the three configuration fields
     const result = {
-      sstConfig: fullResponse || "// No SST configuration generated",
-      suggestedChanges: fullResponse || "# No implementation guide generated", 
-      iamPolicy: fullResponse || "{}"
+      sstConfig: parsedResponse.sstConfig || "// No SST configuration generated",
+      suggestedChanges: parsedResponse.suggestedChanges || "# No implementation guide generated",
+      iamPolicy: parsedResponse.iamPolicy || "{}"
     };
 
     return new Response(JSON.stringify(result), {

@@ -78,3 +78,8 @@ Add the repository to the app that you want to deploy.
 Use the Deployment Wizard to chat with AI and let it generate configuration files and deployment instructions catered to your needs.
 Once you followed all the instructions your app is ready to be deployed.
 Click on the Deploy Button to let our worker machines take care of your deployment.
+
+What is planned to be inmplemented:
+Making changes to user's repo
+Weaviate database integration for storing the history of chats so our app can become better
+

@@ -117,6 +117,32 @@ const Dashboard = () => {
     }
   };
 
+  const handleDelete = async (projectId: string) => {
+    try {
+      const project = projects.find(p => p.id === projectId);
+      
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Project removed",
+        description: `${project?.name || "Project"} has been removed from your projects`
+      });
+
+      fetchProjects();
+    } catch (error: any) {
+      toast({
+        title: "Error removing project",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -169,6 +195,7 @@ const Dashboard = () => {
                 key={project.id}
                 {...project}
                 onDeploy={handleDeploy}
+                onDelete={handleDelete}
               />
             ))}
           </div>

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Rocket, Lock, Unlock } from "lucide-react";
+import { ExternalLink, Rocket, Lock, Unlock, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface ProjectCardProps {
@@ -15,6 +15,7 @@ interface ProjectCardProps {
   deployed_url: string | null;
   created_at: string;
   onDeploy: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export const ProjectCard = ({
@@ -27,7 +28,8 @@ export const ProjectCard = ({
   is_deployed,
   deployed_url,
   created_at,
-  onDeploy
+  onDeploy,
+  onDelete
 }: ProjectCardProps) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -71,6 +73,14 @@ export const ProjectCard = ({
             </a>
           </Button>
         )}
+        
+        <Button 
+          variant="outline"
+          size="sm" 
+          onClick={() => onDelete(id)}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
         
         <Button 
           size="sm" 

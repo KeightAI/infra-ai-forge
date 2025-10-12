@@ -413,45 +413,60 @@ export default function DeploymentWizard() {
               </div>
 
               <div className="space-y-6">
-                <ScrollArea className="h-[350px] w-full rounded-lg border p-4">
-                  <div className="space-y-4">
+                <ScrollArea className="h-[400px] w-full rounded-lg border bg-muted/20">
+                  <div className="p-4 space-y-6">
                     {chatMessages.length === 0 && (
-                      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                        <p>Describe your infrastructure needs, and I'll help you generate the SST configuration</p>
+                      <div className="flex flex-col items-center justify-center h-[350px] text-center px-8">
+                        <div className="bg-primary/10 rounded-full p-4 mb-4">
+                          <Send className="h-8 w-8 text-primary" />
+                        </div>
+                        <p className="text-muted-foreground text-sm">
+                          Describe your infrastructure needs, and I'll help you generate the SST configuration
+                        </p>
                       </div>
                     )}
                     
                     {chatMessages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                       >
-                        <div className={`max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-4`}>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <div className={`max-w-[85%] rounded-xl p-4 ${
+                          message.role === 'user' 
+                            ? 'bg-primary text-primary-foreground shadow-md' 
+                            : 'bg-card border shadow-sm'
+                        }`}>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                            {message.content}
+                          </p>
                           
                           {message.codeBlocks && message.codeBlocks.length > 0 && (
-                            <div className="mt-4 space-y-4">
+                            <div className="mt-4 space-y-3">
                               {message.codeBlocks.map((block, idx) => (
-                                <Card key={idx} className="bg-[#1e1e1e] border-none">
-                                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                    <CardTitle className="text-sm text-[#d4d4d4]">{block.label}</CardTitle>
+                                <Card key={idx} className="bg-[#1e1e1e] border-zinc-700 overflow-hidden">
+                                  <CardHeader className="flex flex-row items-center justify-between pb-3 bg-[#2d2d2d]">
+                                    <CardTitle className="text-sm font-medium text-zinc-300">
+                                      {block.label}
+                                    </CardTitle>
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleCopy(block.code, block.label)}
-                                      className="h-8 w-8 p-0"
+                                      className="h-7 w-7 p-0 hover:bg-zinc-700"
                                     >
                                       {copiedSection === block.label ? (
-                                        <Check className="h-4 w-4 text-green-500" />
+                                        <Check className="h-3.5 w-3.5 text-green-400" />
                                       ) : (
-                                        <Copy className="h-4 w-4 text-[#d4d4d4]" />
+                                        <Copy className="h-3.5 w-3.5 text-zinc-400" />
                                       )}
                                     </Button>
                                   </CardHeader>
-                                  <CardContent>
-                                    <pre className="text-xs text-[#d4d4d4] overflow-x-auto">
-                                      <code>{block.code}</code>
-                                    </pre>
+                                  <CardContent className="p-4">
+                                    <ScrollArea className="max-h-[300px]">
+                                      <pre className="text-xs text-zinc-300 font-mono leading-relaxed">
+                                        <code>{block.code}</code>
+                                      </pre>
+                                    </ScrollArea>
                                   </CardContent>
                                 </Card>
                               ))}
@@ -462,9 +477,12 @@ export default function DeploymentWizard() {
                     ))}
                     
                     {isGenerating && (
-                      <div className="flex justify-start">
-                        <div className="bg-muted rounded-lg p-4">
-                          <p className="text-sm text-muted-foreground">Generating configuration...</p>
+                      <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="bg-card border rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <p className="text-sm text-muted-foreground">Generating configuration...</p>
+                          </div>
                         </div>
                       </div>
                     )}

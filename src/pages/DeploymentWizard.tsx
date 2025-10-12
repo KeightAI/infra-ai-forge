@@ -130,12 +130,15 @@ export default function DeploymentWizard() {
       timestamp: new Date(),
     };
 
-    setChatMessages(prev => [...prev, userMessage]);
+    // Clear input and update state together to prevent race conditions
+    const newMessages = [...chatMessages, userMessage];
+    setChatMessages(newMessages);
     setCurrentInput("");
     setIsGenerating(true);
 
     try {
-      const conversationContext = chatMessages
+      const conversationContext = newMessages
+        .slice(0, -1) // Exclude the current message since we'll add it separately
         .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
         .join('\n\n');
       
@@ -410,10 +413,10 @@ export default function DeploymentWizard() {
               </div>
 
               <div className="space-y-6">
-                <ScrollArea className="h-[500px] w-full rounded-lg border p-4">
+                <ScrollArea className="h-[350px] w-full rounded-lg border p-4">
                   <div className="space-y-4">
                     {chatMessages.length === 0 && (
-                      <div className="flex items-center justify-center h-[450px] text-muted-foreground">
+                      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                         <p>Describe your infrastructure needs, and I'll help you generate the SST configuration</p>
                       </div>
                     )}

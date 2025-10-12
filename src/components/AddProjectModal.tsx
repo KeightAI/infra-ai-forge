@@ -82,6 +82,7 @@ export const AddProjectModal = ({ open, onOpenChange, onProjectAdded }: AddProje
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Insert project first
       const { error } = await supabase.from("projects").insert({
         user_id: user.id,
         name: selectedRepo.name,
@@ -94,10 +95,45 @@ export const AddProjectModal = ({ open, onOpenChange, onProjectAdded }: AddProje
 
       if (error) throw error;
 
-      toast({
-        title: "Project added",
-        description: `${selectedRepo.name} has been added to your projects`
-      });
+      // Get GitHub token for sendRepoContents function
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Call sendRepoContents edge function to fetch and process repo contents
+      if (session?.provider_token) {
+        toast({
+          title: "Project added",
+          description: `${selectedRepo.name} has been added. Fetching repository contents...`
+        });
+
+        // Call the edge function in the background
+        supabase.functions.invoke('sendRepoContents', {
+          body: {
+            repoFullName: selectedRepo.full_name,
+            branch: customBranch || selectedRepo.default_branch,
+            githubToken: session.provider_token
+          }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('Error fetching repo contents:', error);
+            toast({
+              title: "Warning",
+              description: "Project added but failed to fetch repository contents",
+              variant: "destructive"
+            });
+          } else {
+            console.log('Repository contents fetched:', data);
+            toast({
+              title: "Success",
+              description: `Repository contents fetched (${data.filesCount} files)`
+            });
+          }
+        });
+      } else {
+        toast({
+          title: "Project added",
+          description: `${selectedRepo.name} has been added to your projects`
+        });
+      }
 
       onProjectAdded();
       onOpenChange(false);

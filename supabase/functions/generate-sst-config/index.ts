@@ -33,7 +33,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          specification_hash: "b12f55a404ded71e63fdfe150ffa0bac1622efb5f50666932a32333de88585f6",
+          specification_hash: "7550fb92da919dbb4e65e0ab502b35abc2372472c9bb046af8c4745fe93795eb",
           config: {
             "ANALYZER": {
               "provider_id": "openai",

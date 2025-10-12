@@ -63,6 +63,8 @@ export default function DeploymentWizard() {
   const [loading, setLoading] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [showAddProject, setShowAddProject] = useState(false);
+  const [additionalInstructions, setAdditionalInstructions] = useState("");
+  const [refining, setRefining] = useState(false);
   const [aiResponse, setAiResponse] = useState<{
     sstConfig: string;
     suggestedChanges: string;
@@ -190,6 +192,47 @@ export default function DeploymentWizard() {
 
   const addServiceTag = (service: string) => {
     setPrompt(prev => prev + (prev ? " " : "") + service);
+  };
+
+  const handleRefine = async () => {
+    if (!additionalInstructions.trim()) {
+      toast({
+        title: "Enter additional instructions",
+        description: "Please provide instructions to refine the configuration",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setRefining(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-sst-config', {
+        body: {
+          prompt: `${prompt}\n\nAdditional instructions: ${additionalInstructions}`,
+          projectName: selectedProjectData?.name,
+          repository: selectedProjectData?.github_repo_url
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setAiResponse(data);
+      setAdditionalInstructions("");
+      
+      toast({
+        title: "Configuration refined",
+        description: "The configuration has been updated with your additional instructions"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error refining configuration",
+        description: error.message || "Failed to refine configuration",
+        variant: "destructive"
+      });
+    } finally {
+      setRefining(false);
+    }
   };
 
   return (
@@ -413,14 +456,30 @@ export default function DeploymentWizard() {
 
               <Card className="bg-accent/50">
                 <CardContent className="p-6">
-                  <p className="text-sm font-medium mb-2">Review & Modify</p>
+                  <p className="text-sm font-medium mb-2">Refine Configuration</p>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Want to make changes? Go back to edit your prompt or add additional instructions.
+                    Add additional instructions to improve the generated configuration.
                   </p>
                   <Textarea
-                    placeholder="Add additional instructions here..."
-                    className="min-h-[100px] resize-none"
+                    value={additionalInstructions}
+                    onChange={(e) => setAdditionalInstructions(e.target.value)}
+                    placeholder="E.g., Add environment variables for API keys, use TypeScript instead of JavaScript..."
+                    className="min-h-[100px] resize-none mb-3"
                   />
+                  <Button 
+                    onClick={handleRefine} 
+                    disabled={refining || !additionalInstructions.trim()}
+                    className="w-full"
+                  >
+                    {refining ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Refining Configuration...
+                      </>
+                    ) : (
+                      "Refine Configuration"
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             </div>

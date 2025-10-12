@@ -147,10 +147,7 @@ export default function DeploymentWizard() {
         body: {
           prompt: fullPrompt,
           projectName: selectedProjectData.name,
-          repository: selectedProjectData.github_repo_url,
-          selectedServices: AWS_SERVICES.filter(service => 
-            currentInput.toLowerCase().includes(service.toLowerCase())
-          )
+          repository: selectedProjectData.github_repo_url
         }
       });
 

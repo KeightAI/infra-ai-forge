@@ -29,6 +29,7 @@ interface ChatMessage {
     code: string;
     language: string;
     label: string;
+    index?: number;
   }>;
 }
 
@@ -143,32 +144,54 @@ export default function DeploymentWizard() {
 
       if (error) throw error;
 
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.suggestedChanges || "Here's your configuration:",
-        timestamp: new Date(),
-        codeBlocks: [
-          {
-            type: 'sstConfig',
-            code: data.sstConfig,
-            language: 'typescript',
-            label: 'SST Config'
-          },
-          {
-            type: 'suggestedChanges',
-            code: data.suggestedChanges,
-            language: 'markdown',
-            label: 'Implementation Guide'
-          },
-          {
-            type: 'iamPolicy',
-            code: data.iamPolicy,
-            language: 'json',
-            label: 'IAM Policy'
-          }
-        ]
-      };
+      let assistantMessage: ChatMessage;
+
+      if (data.format === 'structured') {
+        // Handle structured response with SST config, implementation guide, and IAM policy
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.suggestedChanges || "Here's your configuration:",
+          timestamp: new Date(),
+          codeBlocks: [
+            {
+              type: 'sstConfig',
+              code: data.sstConfig,
+              language: 'typescript',
+              label: 'SST Config'
+            },
+            {
+              type: 'suggestedChanges',
+              code: data.suggestedChanges,
+              language: 'markdown',
+              label: 'Implementation Guide'
+            },
+            {
+              type: 'iamPolicy',
+              code: data.iamPolicy,
+              language: 'json',
+              label: 'IAM Policy'
+            }
+          ]
+        };
+      } else {
+        // Handle plaintext response with extracted code blocks
+        const contentWithoutCodeBlocks = data.content.replace(/```(\w+)?\n[\s\S]*?```/g, '').trim();
+        
+        assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: contentWithoutCodeBlocks || "Here's your configuration:",
+          timestamp: new Date(),
+          codeBlocks: data.codeBlocks.map((block: any, idx: number) => ({
+            type: 'generic',
+            code: block.code,
+            language: block.language,
+            label: `Code Block ${idx + 1} (${block.language})`,
+            index: idx + 1
+          }))
+        };
+      }
 
       setChatMessages(prev => [...prev, assistantMessage]);
       

@@ -88,18 +88,44 @@ serve(async (req) => {
     const sanitizedProjectName = projectName?.replace(/[^a-zA-Z0-9]/g, '') || 'MyProject';
     const kebabProjectName = projectName?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'my-project';
     
-    const result = {
-      sstConfig: (parsedResponse.sstConfig || "// No SST configuration generated")
-        .replace(/UnknownRepoStack/g, `${sanitizedProjectName}Stack`)
-        .replace(/unknown-repo/g, kebabProjectName),
-      suggestedChanges: (parsedResponse.suggestedChanges || "# No implementation guide generated")
-        .replace(/unknown-repo/g, kebabProjectName),
-      iamPolicy: parsedResponse.iamPolicy || "{}"
-    };
+    // Check if we have a structured response with all required fields
+    if (parsedResponse.sstConfig && parsedResponse.suggestedChanges && parsedResponse.iamPolicy) {
+      const result = {
+        format: 'structured',
+        sstConfig: (parsedResponse.sstConfig || "// No SST configuration generated")
+          .replace(/UnknownRepoStack/g, `${sanitizedProjectName}Stack`)
+          .replace(/unknown-repo/g, kebabProjectName),
+        suggestedChanges: (parsedResponse.suggestedChanges || "# No implementation guide generated")
+          .replace(/unknown-repo/g, kebabProjectName),
+        iamPolicy: parsedResponse.iamPolicy || "{}"
+      };
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } else {
+      // Treat as plaintext response and extract code blocks
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+      const codeBlocks = [];
+      let match;
+      
+      while ((match = codeBlockRegex.exec(messageContent)) !== null) {
+        codeBlocks.push({
+          language: match[1] || 'text',
+          code: match[2].trim()
+        });
+      }
+
+      const result = {
+        format: 'plaintext',
+        content: messageContent,
+        codeBlocks: codeBlocks
+      };
+
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   } catch (error) {
     console.error('Error in generate-sst-config function:', error);
     return new Response(

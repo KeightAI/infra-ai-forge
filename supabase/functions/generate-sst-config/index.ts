@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, projectName, repository } = await req.json();
+    const { prompt, projectName, repository, selectedServices = [] } = await req.json();
     
     const DUST_API_KEY = Deno.env.get('DUST_API_KEY');
     if (!DUST_API_KEY) {
@@ -42,7 +42,10 @@ serve(async (req) => {
           },
           blocking: true,
           inputs: [{
-            prompt: `Project: ${projectName}\nRepository: ${repository}\n\n${prompt}`
+            repoName: projectName,
+            repoUrl: repository,
+            selectedServices: selectedServices,
+            prompt: prompt
           }]
         }),
       }

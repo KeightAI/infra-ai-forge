@@ -12,10 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { repoFullName, branch, githubToken } = await req.json();
+    const body = await req.json();
+    
+    // Support both old (github_url) and new (repoFullName) parameter formats
+    const repoFullName = body.repoFullName || body.github_url;
+    const branch = body.branch;
+    const githubToken = body.githubToken || body.github_token;
     
     if (!repoFullName || !githubToken) {
-      throw new Error('Missing required parameters: repoFullName and githubToken');
+      throw new Error('Missing required parameters: repoFullName/github_url and githubToken/github_token');
     }
 
     const branchName = branch || 'main';

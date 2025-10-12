@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Github, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Github, Plus, Copy, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddProjectModal } from "@/components/AddProjectModal";
@@ -65,6 +65,7 @@ export default function DeploymentWizard() {
   const [showAddProject, setShowAddProject] = useState(false);
   const [additionalInstructions, setAdditionalInstructions] = useState("");
   const [refining, setRefining] = useState(false);
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [aiResponse, setAiResponse] = useState<{
     sstConfig: string;
     suggestedChanges: string;
@@ -192,6 +193,24 @@ export default function DeploymentWizard() {
 
   const addServiceTag = (service: string) => {
     setPrompt(prev => prev + (prev ? " " : "") + service);
+  };
+
+  const handleCopy = async (content: string, section: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedSection(section);
+      toast({
+        title: "Copied to clipboard",
+        description: `${section} has been copied successfully`
+      });
+      setTimeout(() => setCopiedSection(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy to clipboard",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRefine = async () => {
@@ -424,9 +443,21 @@ export default function DeploymentWizard() {
                 </TabsList>
 
                 <TabsContent value="sstConfig" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e]">
+                  <Card className="border-0 bg-[#1e1e1e] relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
+                      onClick={() => handleCopy(aiResponse.sstConfig, "SST Config")}
+                    >
+                      {copiedSection === "SST Config" ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
                         {aiResponse.sstConfig}
                       </pre>
                     </CardContent>
@@ -434,9 +465,21 @@ export default function DeploymentWizard() {
                 </TabsContent>
 
                 <TabsContent value="suggestedChanges" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e]">
+                  <Card className="border-0 bg-[#1e1e1e] relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
+                      onClick={() => handleCopy(aiResponse.suggestedChanges, "Implementation Guide")}
+                    >
+                      {copiedSection === "Implementation Guide" ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
                         {aiResponse.suggestedChanges}
                       </pre>
                     </CardContent>
@@ -444,9 +487,21 @@ export default function DeploymentWizard() {
                 </TabsContent>
 
                 <TabsContent value="iamPolicy" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e]">
+                  <Card className="border-0 bg-[#1e1e1e] relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
+                      onClick={() => handleCopy(aiResponse.iamPolicy, "IAM Policy")}
+                    >
+                      {copiedSection === "IAM Policy" ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
                     <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4]">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
                         {aiResponse.iamPolicy}
                       </pre>
                     </CardContent>

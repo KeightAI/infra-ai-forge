@@ -19,6 +19,7 @@ interface Project {
   is_deployed: boolean;
   deployed_url: string | null;
   created_at: string;
+  deployment_status?: string | null;
 }
 
 const Dashboard = () => {
@@ -38,13 +39,33 @@ const Dashboard = () => {
   const fetchProjects = async () => {
     try {
       setLoadingProjects(true);
-      const { data, error } = await supabase
+      const { data: projectsData, error } = await supabase
         .from("projects")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setProjects(data || []);
+
+      // Fetch latest deployment status for each project
+      const projectsWithStatus = await Promise.all(
+        (projectsData || []).map(async (project) => {
+          const { data: deployment } = await supabase
+            .from("deployments")
+            .select("status, deployed_url")
+            .eq("project_id", project.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          return {
+            ...project,
+            deployment_status: deployment?.status || null,
+            deployed_url: deployment?.deployed_url || project.deployed_url,
+          };
+        })
+      );
+
+      setProjects(projectsWithStatus);
     } catch (error: any) {
       toast({
         title: "Error fetching projects",

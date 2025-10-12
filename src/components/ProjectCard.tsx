@@ -14,6 +14,7 @@ interface ProjectCardProps {
   is_deployed: boolean;
   deployed_url: string | null;
   created_at: string;
+  deployment_status?: string | null;
   onDeploy: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -28,9 +29,22 @@ export const ProjectCard = ({
   is_deployed,
   deployed_url,
   created_at,
+  deployment_status,
   onDeploy,
   onDelete
 }: ProjectCardProps) => {
+  const getStatusBadge = () => {
+    if (deployment_status === 'completed') {
+      return <Badge className="bg-green-500 hover:bg-green-600">Deployed</Badge>;
+    } else if (deployment_status === 'processing') {
+      return <Badge className="bg-blue-500 hover:bg-blue-600">Processing</Badge>;
+    } else if (deployment_status === 'pending') {
+      return <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>;
+    } else if (deployment_status === 'failed') {
+      return <Badge className="bg-red-500 hover:bg-red-600">Failed</Badge>;
+    }
+    return <Badge variant="secondary">Not Deployed</Badge>;
+  };
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -54,11 +68,7 @@ export const ProjectCard = ({
         
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">Status:</span>
-          {is_deployed ? (
-            <Badge className="bg-green-500 hover:bg-green-600">Deployed</Badge>
-          ) : (
-            <Badge variant="secondary">Not Deployed</Badge>
-          )}
+          {getStatusBadge()}
         </div>
 
         {deployed_url && (

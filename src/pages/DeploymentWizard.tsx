@@ -114,6 +114,15 @@ export default function DeploymentWizard() {
       return;
     }
 
+    if (!selectedProjectData.github_repo_url) {
+      toast({
+        title: "Missing Repository URL",
+        description: "The selected project doesn't have a GitHub repository URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',

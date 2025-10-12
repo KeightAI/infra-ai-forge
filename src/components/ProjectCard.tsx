@@ -91,15 +91,6 @@ export const ProjectCard = ({
       </CardContent>
       
       <CardFooter className="flex gap-2">
-        {deployed_url && (
-          <Button variant="default" size="sm" asChild>
-            <a href={deployed_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              View Live
-            </a>
-          </Button>
-        )}
-        
         {github_repo_url && (
           <Button variant="outline" size="sm" asChild>
             <a href={github_repo_url} target="_blank" rel="noopener noreferrer">

@@ -26,7 +26,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 interface DeploymentJob {
   id: string;
   github_url: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'toBeRemoved';
   branch?: string;
   stage?: string;
   error_message?: string;
@@ -80,12 +80,13 @@ function executeCommand(command: string, cwd?: string): string {
   }
 }
 
-// Clone repository and deploy to AWS using SST
-async function deployRepository(job: DeploymentJob) {
+// Clone repository and deploy/remove using SST
+async function processRepository(job: DeploymentJob) {
   let repoDir: string | null = null;
+  const isRemoval = job.status === 'toBeRemoved';
 
   try {
-    console.log(`Starting deployment for job ${job.id}: ${job.github_url}`);
+    console.log(`Starting ${isRemoval ? 'removal' : 'deployment'} for job ${job.id}: ${job.github_url}`);
 
     // Create temporary directory
     repoDir = mkdtempSync(join(tmpdir(), 'repo-'));
@@ -108,18 +109,19 @@ async function deployRepository(job: DeploymentJob) {
       executeCommand('npm install -g sst', repoDir);
     }
 
-    // Deploy using SST
+    // Deploy or remove using SST
     const stage = job.stage || 'production';
-    console.log(`Deploying to stage: ${stage}`);
-    const deployOutput = executeCommand(`npx sst deploy --stage ${stage}`, repoDir);
+    const command = isRemoval ? 'remove' : 'deploy';
+    console.log(`Running sst ${command} for stage: ${stage}`);
+    const output = executeCommand(`npx sst ${command} --stage ${stage}`, repoDir);
 
     // Update job as completed
     await updateJobStatus(job.id, 'completed');
 
-    console.log(`Successfully deployed job ${job.id}`);
-    return deployOutput;
+    console.log(`Successfully ${isRemoval ? 'removed' : 'deployed'} job ${job.id}`);
+    return output;
   } catch (error: any) {
-    console.error(`Deployment failed for job ${job.id}:`, error.message);
+    console.error(`${isRemoval ? 'Removal' : 'Deployment'} failed for job ${job.id}:`, error.message);
     await updateJobStatus(job.id, 'failed', error.message);
     throw error;
   } finally {
@@ -135,7 +137,7 @@ async function deployRepository(job: DeploymentJob) {
   }
 }
 
-// Poll database for pending jobs
+// Poll database for pending jobs and removals
 async function pollForJobs() {
   try {
     const { data: jobs_2 } = await supabase
@@ -144,12 +146,12 @@ async function pollForJobs() {
 
       console.log(jobs_2);
 
-    console.log('Polling for pending jobs...');
+    console.log('Polling for pending jobs and removals...');
 
     const { data: jobs, error } = await supabase
       .from('deployments')
       .select('*')
-      .eq('status', 'pending')
+      .in('status', ['pending', 'toBeRemoved'])
       .order('created_at', { ascending: true })
       .limit(1);
 
@@ -161,18 +163,18 @@ async function pollForJobs() {
     console.log(jobs);
 
     if (!jobs || jobs.length === 0) {
-      console.log('No pending jobs found');
+      console.log('No pending jobs or removals found');
       return;
     }
 
     const job = jobs[0] as DeploymentJob;
-    console.log(`Found pending job: ${job.id}`);
+    console.log(`Found job: ${job.id} with status: ${job.status}`);
 
     // Update status to processing
     await updateJobStatus(job.id, 'processing');
 
-    // Process the deployment
-    await deployRepository(job);
+    // Process the deployment or removal
+    await processRepository(job);
   } catch (error) {
     console.error('Error in polling cycle:', error);
   }

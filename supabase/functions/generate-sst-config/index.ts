@@ -84,10 +84,16 @@ serve(async (req) => {
       throw new Error('Invalid JSON format in Dust.tt response');
     }
 
-    // Extract the three configuration fields
+    // Extract the three configuration fields and replace generic names with actual project name
+    const sanitizedProjectName = projectName?.replace(/[^a-zA-Z0-9]/g, '') || 'MyProject';
+    const kebabProjectName = projectName?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'my-project';
+    
     const result = {
-      sstConfig: parsedResponse.sstConfig || "// No SST configuration generated",
-      suggestedChanges: parsedResponse.suggestedChanges || "# No implementation guide generated",
+      sstConfig: (parsedResponse.sstConfig || "// No SST configuration generated")
+        .replace(/UnknownRepoStack/g, `${sanitizedProjectName}Stack`)
+        .replace(/unknown-repo/g, kebabProjectName),
+      suggestedChanges: (parsedResponse.suggestedChanges || "# No implementation guide generated")
+        .replace(/unknown-repo/g, kebabProjectName),
       iamPolicy: parsedResponse.iamPolicy || "{}"
     };
 

@@ -46,16 +46,32 @@ export const ProjectCard = ({
         )}
       </CardHeader>
       
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">Branch:</span>
           <Badge variant="outline">{branch_name}</Badge>
         </div>
         
-        {is_deployed && deployed_url && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Status:</span>
+          {is_deployed ? (
+            <Badge className="bg-green-500 hover:bg-green-600">Deployed</Badge>
+          ) : (
+            <Badge variant="secondary">Not Deployed</Badge>
+          )}
+        </div>
+
+        {deployed_url && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Status:</span>
-            <Badge className="bg-green-500">Deployed</Badge>
+            <span className="text-muted-foreground">URL:</span>
+            <a 
+              href={deployed_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline text-xs truncate max-w-[200px]"
+            >
+              {deployed_url}
+            </a>
           </div>
         )}
         
@@ -65,6 +81,15 @@ export const ProjectCard = ({
       </CardContent>
       
       <CardFooter className="flex gap-2">
+        {deployed_url && (
+          <Button variant="default" size="sm" asChild>
+            <a href={deployed_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View Live
+            </a>
+          </Button>
+        )}
+        
         {github_repo_url && (
           <Button variant="outline" size="sm" asChild>
             <a href={github_repo_url} target="_blank" rel="noopener noreferrer">

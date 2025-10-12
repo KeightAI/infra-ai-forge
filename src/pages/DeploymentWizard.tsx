@@ -2,16 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Github, Plus, Copy, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Github, Plus, Copy, Check, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddProjectModal } from "@/components/AddProjectModal";
-import { z } from "zod";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Project {
   id: string;
@@ -19,6 +17,19 @@ interface Project {
   github_repo_url: string | null;
   branch_name: string;
   description: string | null;
+}
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  codeBlocks?: Array<{
+    type: 'sstConfig' | 'suggestedChanges' | 'iamPolicy' | 'generic';
+    code: string;
+    language: string;
+    label: string;
+  }>;
 }
 
 const AWS_SERVICES = [
@@ -34,22 +45,10 @@ const STEPS = [
   },
   {
     number: 2,
-    title: "Configure Infrastructure",
-    subtitle: "Describe your deployment needs"
-  },
-  {
-    number: 3,
-    title: "Review & Deploy",
-    subtitle: "Review generated configuration"
+    title: "Configure & Chat with AI",
+    subtitle: "Describe and refine your deployment needs"
   }
 ];
-
-const promptSchema = z.object({
-  prompt: z.string()
-    .trim()
-    .min(10, { message: "Please provide more details (at least 10 characters)" })
-    .max(2000, { message: "Prompt must be less than 2000 characters" })
-});
 
 export default function DeploymentWizard() {
   const navigate = useNavigate();
@@ -59,18 +58,13 @@ export default function DeploymentWizard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedBranch, setSelectedBranch] = useState<string>("");
-  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [showAddProject, setShowAddProject] = useState(false);
-  const [additionalInstructions, setAdditionalInstructions] = useState("");
-  const [refining, setRefining] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [currentInput, setCurrentInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
-  const [aiResponse, setAiResponse] = useState<{
-    sstConfig: string;
-    suggestedChanges: string;
-    iamPolicy: string;
-  } | null>(null);
 
   const selectedProjectData = projects.find(p => p.id === selectedProject);
 
@@ -100,90 +94,123 @@ export default function DeploymentWizard() {
     }
   }, [user]);
 
-  const handleNext = async () => {
-    if (step === 1 && !selectedProject) {
+  const handleSendMessage = async () => {
+    if (!currentInput.trim() || currentInput.trim().length < 10) {
       toast({
-        title: "Select a repository",
-        description: "Please select a repository to continue",
-        variant: "destructive"
+        title: "Invalid Input",
+        description: "Please provide a more detailed description (at least 10 characters)",
+        variant: "destructive",
       });
       return;
     }
 
-    if (step === 2 && !prompt.trim()) {
+    if (!selectedProjectData) {
       toast({
-        title: "Enter a prompt",
-        description: "Please describe your infrastructure needs",
-        variant: "destructive"
+        title: "No Project Selected",
+        description: "Please select a project first",
+        variant: "destructive",
       });
       return;
     }
 
-    if (step === 2) {
-      // Validate prompt input
-      const validation = promptSchema.safeParse({ prompt });
-      if (!validation.success) {
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: currentInput.trim(),
+      timestamp: new Date(),
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setCurrentInput("");
+    setIsGenerating(true);
+
+    try {
+      const conversationContext = chatMessages
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n\n');
+      
+      const fullPrompt = conversationContext 
+        ? `${conversationContext}\n\nUser: ${userMessage.content}`
+        : userMessage.content;
+
+      const { data, error } = await supabase.functions.invoke('generate-sst-config', {
+        body: {
+          prompt: fullPrompt,
+          projectName: selectedProjectData.name,
+          repository: selectedProjectData.github_repo_url,
+        }
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.suggestedChanges || "Here's your configuration:",
+        timestamp: new Date(),
+        codeBlocks: [
+          {
+            type: 'sstConfig',
+            code: data.sstConfig,
+            language: 'typescript',
+            label: 'SST Config'
+          },
+          {
+            type: 'suggestedChanges',
+            code: data.suggestedChanges,
+            language: 'markdown',
+            label: 'Implementation Guide'
+          },
+          {
+            type: 'iamPolicy',
+            code: data.iamPolicy,
+            language: 'json',
+            label: 'IAM Policy'
+          }
+        ]
+      };
+
+      setChatMessages(prev => [...prev, assistantMessage]);
+      
+      toast({
+        title: "Configuration Generated",
+        description: "Your SST configuration is ready",
+      });
+    } catch (error) {
+      console.error('Error generating configuration:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate configuration. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      if (!selectedProject) {
         toast({
-          title: "Invalid input",
-          description: validation.error.errors[0].message,
-          variant: "destructive"
+          title: "No Project Selected",
+          description: "Please select a project to continue",
+          variant: "destructive",
         });
         return;
       }
-
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-sst-config', {
-          body: {
-            prompt: validation.data.prompt,
-            projectName: selectedProjectData?.name,
-            repository: selectedProjectData?.github_repo_url
-          }
-        });
-
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw error;
-        }
-
-        if (data?.error) {
-          console.error('Function returned error:', data.error);
-          throw new Error(data.error);
-        }
-
-        console.log('Received AI response:', data);
-        setAiResponse(data);
-        setStep(3);
-        
-        toast({
-          title: "Configuration generated",
-          description: "Review the generated configuration in the next step"
-        });
-      } catch (error: any) {
-        console.error('Error in wizard:', error);
-        toast({
-          title: "Error generating configuration",
-          description: error.message || "Failed to generate configuration",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-      return;
+      setStep(2);
     }
-
-    setStep(step + 1);
   };
 
   const handleBack = () => {
-    if (step === 1) {
-      navigate("/dashboard");
+    if (step > 1) {
+      setStep(step - 1);
     } else {
-      setStep(Math.max(1, step - 1));
+      navigate('/dashboard');
     }
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
     toast({
       title: "Deployment initiated",
       description: "Your SST configuration is being applied"
@@ -192,7 +219,7 @@ export default function DeploymentWizard() {
   };
 
   const addServiceTag = (service: string) => {
-    setPrompt(prev => prev + (prev ? " " : "") + service);
+    setCurrentInput(prev => prev + (prev ? " " : "") + service);
   };
 
   const handleCopy = async (content: string, section: string) => {
@@ -210,47 +237,6 @@ export default function DeploymentWizard() {
         description: "Could not copy to clipboard",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleRefine = async () => {
-    if (!additionalInstructions.trim()) {
-      toast({
-        title: "Enter additional instructions",
-        description: "Please provide instructions to refine the configuration",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setRefining(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-sst-config', {
-        body: {
-          prompt: `${prompt}\n\nAdditional instructions: ${additionalInstructions}`,
-          projectName: selectedProjectData?.name,
-          repository: selectedProjectData?.github_repo_url
-        }
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      setAiResponse(data);
-      setAdditionalInstructions("");
-      
-      toast({
-        title: "Configuration refined",
-        description: "The configuration has been updated with your additional instructions"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error refining configuration",
-        description: error.message || "Failed to refine configuration",
-        variant: "destructive"
-      });
-    } finally {
-      setRefining(false);
     }
   };
 
@@ -381,35 +367,79 @@ export default function DeploymentWizard() {
             </div>
           )}
 
-          {/* Step 2: Configure Infrastructure */}
+          {/* Step 2: Configure & Chat with AI */}
           {step === 2 && (
             <div className="space-y-8">
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2">Configure Infrastructure</h2>
+                <h2 className="text-3xl font-bold mb-2">Configure & Chat with AI</h2>
                 <p className="text-muted-foreground">
-                  Describe your infrastructure needs and AWS services
+                  Describe your infrastructure needs and refine with AI assistance
                 </p>
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium mb-3 block">
-                    Describe Your Infrastructure Needs
-                  </label>
-                  <Textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="E.g., I need a serverless API with DynamoDB for storing user data and S3 for file uploads..."
-                    className="min-h-[200px] resize-none"
-                  />
-                </div>
+                <ScrollArea className="h-[500px] w-full rounded-lg border p-4">
+                  <div className="space-y-4">
+                    {chatMessages.length === 0 && (
+                      <div className="flex items-center justify-center h-[450px] text-muted-foreground">
+                        <p>Describe your infrastructure needs, and I'll help you generate the SST configuration</p>
+                      </div>
+                    )}
+                    
+                    {chatMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-4`}>
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          
+                          {message.codeBlocks && message.codeBlocks.length > 0 && (
+                            <div className="mt-4 space-y-4">
+                              {message.codeBlocks.map((block, idx) => (
+                                <Card key={idx} className="bg-[#1e1e1e] border-none">
+                                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm text-[#d4d4d4]">{block.label}</CardTitle>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCopy(block.code, block.label)}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {copiedSection === block.label ? (
+                                        <Check className="h-4 w-4 text-green-500" />
+                                      ) : (
+                                        <Copy className="h-4 w-4 text-[#d4d4d4]" />
+                                      )}
+                                    </Button>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <pre className="text-xs text-[#d4d4d4] overflow-x-auto">
+                                      <code>{block.code}</code>
+                                    </pre>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {isGenerating && (
+                      <div className="flex justify-start">
+                        <div className="bg-muted rounded-lg p-4">
+                          <p className="text-sm text-muted-foreground">Generating configuration...</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
 
-                <div>
-                  <label className="text-sm font-medium mb-3 block">
-                    Quick Add AWS Services
-                  </label>
+                <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    {AWS_SERVICES.map((service) => (
+                    <span className="text-sm text-muted-foreground">Quick add:</span>
+                    {AWS_SERVICES.map(service => (
                       <Badge
                         key={service}
                         variant="outline"
@@ -420,151 +450,47 @@ export default function DeploymentWizard() {
                       </Badge>
                     ))}
                   </div>
+
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Describe your infrastructure or ask for refinements..."
+                      value={currentInput}
+                      onChange={(e) => setCurrentInput(e.target.value)}
+                      className="min-h-[100px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                    />
+                    <Button 
+                      onClick={handleSendMessage} 
+                      disabled={isGenerating || !currentInput.trim()}
+                      className="self-end"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Review & Deploy */}
-          {step === 3 && aiResponse && (
-            <div className="space-y-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2">Review & Deploy</h2>
-                <p className="text-muted-foreground">
-                  Review the generated configuration and apply changes
-                </p>
-              </div>
-
-              <Tabs defaultValue="sstConfig" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="sstConfig">SST Config</TabsTrigger>
-                  <TabsTrigger value="suggestedChanges">Implementation Guide</TabsTrigger>
-                  <TabsTrigger value="iamPolicy">IAM Policy</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="sstConfig" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e] relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
-                      onClick={() => handleCopy(aiResponse.sstConfig, "SST Config")}
-                    >
-                      {copiedSection === "SST Config" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
-                        {aiResponse.sstConfig}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="suggestedChanges" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e] relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
-                      onClick={() => handleCopy(aiResponse.suggestedChanges, "Implementation Guide")}
-                    >
-                      {copiedSection === "Implementation Guide" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
-                        {aiResponse.suggestedChanges}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="iamPolicy" className="mt-6">
-                  <Card className="border-0 bg-[#1e1e1e] relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-4 right-4 text-[#d4d4d4] hover:bg-white/10"
-                      onClick={() => handleCopy(aiResponse.iamPolicy, "IAM Policy")}
-                    >
-                      {copiedSection === "IAM Policy" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <CardContent className="p-6">
-                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono text-[#d4d4d4] pr-12">
-                        {aiResponse.iamPolicy}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-
-              <Card className="bg-accent/50">
-                <CardContent className="p-6">
-                  <p className="text-sm font-medium mb-2">Refine Configuration</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Add additional instructions to improve the generated configuration.
-                  </p>
-                  <Textarea
-                    value={additionalInstructions}
-                    onChange={(e) => setAdditionalInstructions(e.target.value)}
-                    placeholder="E.g., Add environment variables for API keys, use TypeScript instead of JavaScript..."
-                    className="min-h-[100px] resize-none mb-3"
-                  />
-                  <Button 
-                    onClick={handleRefine} 
-                    disabled={refining || !additionalInstructions.trim()}
-                    className="w-full"
-                  >
-                    {refining ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Refining Configuration...
-                      </>
-                    ) : (
-                      "Refine Configuration"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-8 mt-8 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={loading}
-              size="lg"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+          <div className="mt-8 flex justify-between">
+            <Button variant="outline" onClick={handleBack}>
               {step === 1 ? "Back to Dashboard" : "Back"}
             </Button>
-
-            {step < 3 ? (
-              <Button onClick={handleNext} disabled={loading} size="lg">
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Next Step"
-                )}
+            
+            {step === 1 && (
+              <Button onClick={handleNext} disabled={!selectedProject}>
+                Next Step
               </Button>
-            ) : (
-              <Button onClick={handleApply} size="lg">
+            )}
+            
+            {step === 2 && chatMessages.length > 0 && (
+              <Button onClick={handleApply}>
                 Apply Configuration
               </Button>
             )}

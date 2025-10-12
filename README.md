@@ -58,34 +58,6 @@ Deploys to AWS using SST CLI
 Updates deployment status in real-time
 Support for multiple deployment stages (production, staging, etc.)
 Handles both deployments and removals
-### 5. Project Management
-
-Dashboard for viewing all connected projects
-Deploy, delete, and manage multiple projects
-Track deployment status and history
-Project metadata (name, description, branch, deployment URL)
-Technology Stack
-Frontend: React, TypeScript, Tailwind CSS, shadcn/ui
-Backend: Supabase (database, authentication, edge functions)
-AI: Dust.tt AI agent for configuration generation
-Deployment: SST (Serverless Stack) framework for AWS
-Worker: Node.js/Express deployment worker on Fly.io
-Authentication: GitHub OAuth
-User Journey
-Sign in with GitHub account
-Add GitHub repository to the platform
-Use Deployment Wizard to describe infrastructure needs in natural language
-AI generates production-ready SST configurations, implementation guides, and IAM policies
-Review, copy, and apply configurations to your repository
-Click "Deploy" to trigger automated deployment to AWS
-Background worker handles the entire deployment process
-Monitor deployment status from the dashboard
-Key Value Propositions
-No Infrastructure Expertise Required: AI translates plain English requirements into production-ready configurations
-Rapid Prototyping: Go from repository to deployed AWS infrastructure in minutes
-Best Practices Built-In: AI generates configurations following AWS and SST best practices
-Iterative Refinement: Chat interface allows you to refine configurations through conversation
-Automated Deployments: Set-it-and-forget-it deployment pipeline with status tracking
 
 ## Build Information
 

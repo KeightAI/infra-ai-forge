@@ -25,11 +25,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 
 interface DeploymentJob {
   id: string;
-  github_url: string;
+  repo_url: string;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'toBeRemoved';
   branch?: string;
   stage?: string;
-  error_message?: string;
+  logs?: string;
   created_at: string;
   updated_at: string;
 }
@@ -44,7 +44,7 @@ async function updateJobStatus(
     .from('deployments')
     .update({
       status,
-      error_message: errorMessage,
+      logs: errorMessage,
       updated_at: new Date().toISOString(),
     })
     .eq('id', jobId);
@@ -94,7 +94,7 @@ async function processRepository(job: DeploymentJob) {
 
     // Clone the repository
     const branch = job.branch || 'main';
-    const cloneCommand = `git clone --depth 1 --branch ${branch} ${job.github_url} ${repoDir}`;
+    const cloneCommand = `git clone --depth 1 --branch ${branch} ${job.repo_url} ${repoDir}`;
     executeCommand(cloneCommand);
 
     // Install dependencies
@@ -111,6 +111,13 @@ async function processRepository(job: DeploymentJob) {
 
     // Deploy or remove using SST
     const stage = job.stage || 'production';
+
+    console.log(`Unlocking stage: ${stage}`);
+    executeCommand(`npx sst unlock --stage ${stage} --print-logs`, repoDir);
+
+
+    console.log(`Deploying to stage: ${stage}`);
+    const deployOutput = executeCommand(`npx sst deploy --stage ${stage} --print-logs`, repoDir);
     const command = isRemoval ? 'remove' : 'deploy';
     console.log(`Running sst ${command} for stage: ${stage}`);
     const output = executeCommand(`npx sst ${command} --stage ${stage}`, repoDir);
